@@ -30,7 +30,6 @@ public class CipherToolsTest {
             byte[] after = CipherTools.decrypt(encrypted,  cipherKey);
 
             assertTrue(Arrays.equals(before, after));
-            assertFalse(Arrays.equals(before, encrypted));
         }
     }
 

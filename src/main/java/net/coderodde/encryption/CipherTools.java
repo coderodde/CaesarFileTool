@@ -96,19 +96,4 @@ public class CipherTools {
         data[offset + 2] = (byte)((value >>> 16) & 0xff);
         data[offset + 3] = (byte)((value >>> 24) & 0xff);
     }
-
-    public static void main(final String... args) {
-        Random random = new Random();
-        byte[] before = new byte[10];
-        random.nextBytes(before);
-
-        int cipherKey = random.nextInt();
-        byte[] encrypted = encrypt(before, cipherKey);
-        byte[] after = decrypt(encrypted, cipherKey);
-
-        System.out.println("Before:    " + Arrays.toString(before));
-        System.out.println("Encrypted: " + Arrays.toString(encrypted));
-        System.out.println("After:     " + Arrays.toString(after));
-        System.out.println("Match: " + Arrays.equals(before, after));
-    }
 }
