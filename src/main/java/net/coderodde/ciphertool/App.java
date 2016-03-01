@@ -1,9 +1,22 @@
 package net.coderodde.ciphertool;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import net.coderodde.encryption.CipherTools;
 import net.coderodde.file.FileTools;
 
@@ -89,15 +102,145 @@ public class App {
     
     public void exec() {
         if (graphicalInterfaceRequested) {
-            execAsGUI();
+            SwingUtilities.invokeLater(() -> { execAsGUI(); });
         } else {
             execAsCommandLine();
         }
     }
     
     private void execAsGUI() {
-        System.out.println("GUI");
+        JFrame frame = new JFrame("File cipher tool");
+        JButton buttonEncrypt = new JButton("Encrypt");
+        JButton buttonDecrypt = new JButton("Decrypt");
+        
+        buttonEncrypt.setPreferredSize(new Dimension(200, 40));
+        buttonDecrypt.setPreferredSize(new Dimension(200, 40));
+        
+        buttonEncrypt.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File[] files = askUserToChooseFiles("Choose files to encrypt", 
+                                                    frame);
+                if (files == null) {
+                    return;
+                }
+                
+                String keyString = 
+                        JOptionPane.showInputDialog(
+                                frame, 
+                                "Type in the encryption key:", 
+                                "",
+                                JOptionPane.QUESTION_MESSAGE);
+                
+                if (keyString.length() >= 2
+                        && (keyString.startsWith("0x") || 
+                            keyString.startsWith("0X"))) {
+                    String keyStringPrepared = keyString.substring(2)
+                                                        .trim()
+                                                        .toLowerCase();
+                    
+                    try {
+                        int key = Integer.parseInt(keyStringPrepared, 16);
+                        encryptAll(Arrays.asList(files), key);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(
+                                frame, 
+                                "\"" + keyString+ "\" is an invalid key.", 
+                                "", 
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    try {
+                        int key = Integer.parseInt(keyString);
+                        encryptAll(Arrays.asList(files), key);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(
+                                frame, 
+                                "\"" + keyString+ "\" is an invalid key.", 
+                                "", 
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+        
+        buttonDecrypt.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File[] files = askUserToChooseFiles("Choose files to decrypt", 
+                                                    frame);
+                if (files == null) {
+                    return;
+                }
+                
+                String keyString = 
+                        JOptionPane.showInputDialog(
+                                frame, 
+                                "Type in the decryption key:", 
+                                "",
+                                JOptionPane.QUESTION_MESSAGE);
+                
+                if (keyString.length() >= 2
+                        && (keyString.startsWith("0x") || 
+                            keyString.startsWith("0X"))) {
+                    String keyStringPrepared = keyString.substring(2)
+                                                        .trim()
+                                                        .toLowerCase();
+                    
+                    try {
+                        int key = Integer.parseInt(keyStringPrepared, 16);
+                        decryptAll(Arrays.asList(files), key);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(
+                                frame, 
+                                "\"" + keyString+ "\" is an invalid key.", 
+                                "", 
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    try {
+                        int key = Integer.parseInt(keyString);
+                        decryptAll(Arrays.asList(files), key);
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(
+                                frame, 
+                                "\"" + keyString+ "\" is an invalid key.", 
+                                "", 
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+        
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(buttonEncrypt, BorderLayout.NORTH);
+        frame.getContentPane().add(buttonDecrypt, BorderLayout.SOUTH);
+        
+        frame.pack();
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        moveToCenter(frame);
+        frame.setVisible(true);
     }
+    
+    private File[] askUserToChooseFiles(String title, JFrame ownerFrame) {
+        JFileChooser chooser = new JFileChooser(title);
+        int status = chooser.showOpenDialog(ownerFrame);
+        
+        if (status == JFileChooser.APPROVE_OPTION) {
+            return new File[]{ chooser.getSelectedFile() };
+        }
+        
+        return null;
+    }
+    
+    private static void moveToCenter(JFrame frame) {
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setLocation((screen.width  - frame.getWidth())  >> 1,
+                          (screen.height - frame.getHeight()) >> 1);
+    } 
     
     private void execAsCommandLine() {
         List<File> fileList = getFileList(args);
@@ -115,6 +258,7 @@ public class App {
     }
     
     private void encryptAll(List<File> fileList, int key) {
+        System.out.println("Size: " + fileList.size());
         fileList.stream().forEach((File file) -> {
             try {
                 byte[] data = FileTools.readFile(file);
