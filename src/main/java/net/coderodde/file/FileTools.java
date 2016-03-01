@@ -5,84 +5,71 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Objects;
 
 /**
- *
+ * This class contains utility methods for writing and reading binary data in 
+ * files.
+ * 
  * @author Rodion "rodde" Efremov 
  * @version 1.6 (Feb 29, 2016)
  */
 public class FileTools {
-    
-    public static byte[] readFile(File file) {
+
+    /**
+     * This method returns the byte array that represent the contents of 
+     * {@code file}.
+     * 
+     * @param  file the file to read.
+     * @return the array of bytes representing the contents of the input file.
+     */
+    public static byte[] readFile(File file) 
+    throws IOException, FileNotFoundException {
         Objects.requireNonNull(file, "The input file is null.");
-        checkFile(file);
         long size = file.length();
         checkSize(size);
-        
-        try {
-            FileInputStream stream = new FileInputStream(file);
-            byte[] data = new byte[(int) size];
-            int bytesRead = stream.read(data);
-            stream.close();
-            
-            if (bytesRead != size) {
-                throw new IllegalStateException(
-                        "File size and read count mismatch. File size: " +
-                        size + ", bytes read: " + bytesRead);
-            }
-            
-            return data;
-        } catch (FileNotFoundException ex) {
-            // This should not happen as we check in 'checkFile' that the file 
-            // exists.           
-            throw new IllegalStateException(
-                    "File \"" + file.getAbsolutePath() +
-                    "\" magically disappeared.");
-        } catch (IOException ex) {
-            throw new IllegalStateException(
-                    "Could not process the file \"" + file.getAbsolutePath() + 
-                    "\".");
+
+        byte[] data;
+        int bytesRead;
+
+        try (FileInputStream stream = new FileInputStream(file)) {
+            data = new byte[(int) size];
+            bytesRead = stream.read(data);
         }
+
+        if (bytesRead != size) {
+            throw new IllegalStateException(
+                    "File size and read count mismatch. File size: " +
+                    size + ", bytes read: " + bytesRead);
+        }
+
+        return data;
     }
-    
-    public static void writeFile(File file, byte[] data) {
+
+    /**
+     * Writes the byte array {@code data} to the file {@code file}. After 
+     * successful operation of this method, the input file will contain exactly
+     * the contents of the input data.
+     * 
+     * @param file the file to write to.
+     * @param data the data array to write.
+     * @throws java.io.IOException           if file IO fails.
+     * @throws java.io.FileNotFoundException if file does not exist.
+     */
+    public static void writeFile(File file, byte[] data)
+    throws IOException, FileNotFoundException {
         Objects.requireNonNull(file, "The input file is null.");
         Objects.requireNonNull(data, "The input data to write is null.");
-        checkFile(file);
-        
-        try {
-            BufferedOutputStream stream = new BufferedOutputStream(
-                                              new FileOutputStream(file));
+
+        try (BufferedOutputStream stream = new BufferedOutputStream(
+                                           new FileOutputStream(file))) {
             stream.write(data);
-            stream.close();
-        } catch (FileNotFoundException ex) {
-            // This should not happen either as we check in 'checkFile' that the
-            // file exists.
-            throw new IllegalStateException(
-                    "File \"" + file.getAbsolutePath() + 
-                    "\" magically disappeared.");
-        } catch (IOException ex) {
-            
         }
     }
-    
-    private static final void checkFile(File file) {
-        if (!file.exists()) {
-            throw new IllegalArgumentException(
-                    "The file \"" + file.getAbsolutePath() + 
-                    "\" does not exist.");
-        }
-        
-        if (!file.isFile()) {
-            throw new IllegalArgumentException(
-                    "The file \"" + file.getAbsolutePath() + 
-                    "\" is not a regular file.");
-        }
-    }
-    
+
+    // This method ensures that file size is small enough to be represented 
+    // using a variable of type 'int'.
     private static final void checkSize(long size) {
         if (size > Integer.MAX_VALUE) {
             throw new IllegalStateException(
