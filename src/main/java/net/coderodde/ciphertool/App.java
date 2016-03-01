@@ -3,17 +3,12 @@ package net.coderodde.ciphertool;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import net.coderodde.encryption.CipherTools;
 import net.coderodde.file.FileTools;
@@ -34,11 +29,6 @@ public class App {
      "         <key>   the key in decimal; " + 
                       "use prefix \"0x\" for hexadecimal.\n" +
      "If you omit all arguments a GUI is started instead.";
-    
-    private enum Mode {
-        ENCRYPTING,
-        DECRYPTING,
-    }
     
     private boolean graphicalInterfaceRequested;
     private boolean printHelpMessage;
@@ -114,103 +104,11 @@ public class App {
         buttonEncrypt.setPreferredSize(new Dimension(200, 40));
         buttonDecrypt.setPreferredSize(new Dimension(200, 40));
         
-        buttonEncrypt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                File[] files = askUserToChooseFiles("Choose files to encrypt", 
-                                                    frame);
-                if (files == null) {
-                    return;
-                }
-                
-                String keyString = 
-                        JOptionPane.showInputDialog(
-                                frame, 
-                                "Type in the encryption key:", 
-                                "",
-                                JOptionPane.QUESTION_MESSAGE);
-                
-                if (keyString.length() >= 2
-                        && (keyString.startsWith("0x") || 
-                            keyString.startsWith("0X"))) {
-                    String keyStringPrepared = keyString.substring(2)
-                                                        .trim()
-                                                        .toLowerCase();
-                    
-                    try {
-                        int key = Integer.parseInt(keyStringPrepared, 16);
-                        encryptAll(Arrays.asList(files), key);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(
-                                frame, 
-                                "\"" + keyString+ "\" is an invalid key.", 
-                                "", 
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    try {
-                        int key = Integer.parseInt(keyString);
-                        encryptAll(Arrays.asList(files), key);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(
-                                frame, 
-                                "\"" + keyString+ "\" is an invalid key.", 
-                                "", 
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        });
+        buttonEncrypt.addActionListener(
+                new MyActionListener(frame, Mode.ENCRYPTING));
         
-        buttonDecrypt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                File[] files = askUserToChooseFiles("Choose files to decrypt", 
-                                                    frame);
-                if (files == null) {
-                    return;
-                }
-                
-                String keyString = 
-                        JOptionPane.showInputDialog(
-                                frame, 
-                                "Type in the decryption key:", 
-                                "",
-                                JOptionPane.QUESTION_MESSAGE);
-                
-                if (keyString.length() >= 2
-                        && (keyString.startsWith("0x") || 
-                            keyString.startsWith("0X"))) {
-                    String keyStringPrepared = keyString.substring(2)
-                                                        .trim()
-                                                        .toLowerCase();
-                    
-                    try {
-                        int key = Integer.parseInt(keyStringPrepared, 16);
-                        decryptAll(Arrays.asList(files), key);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(
-                                frame, 
-                                "\"" + keyString+ "\" is an invalid key.", 
-                                "", 
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    try {
-                        int key = Integer.parseInt(keyString);
-                        decryptAll(Arrays.asList(files), key);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(
-                                frame, 
-                                "\"" + keyString+ "\" is an invalid key.", 
-                                "", 
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        });
+        buttonDecrypt.addActionListener(
+                new MyActionListener(frame, Mode.DECRYPTING));
         
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(buttonEncrypt, BorderLayout.NORTH);
@@ -221,18 +119,6 @@ public class App {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         moveToCenter(frame);
         frame.setVisible(true);
-    }
-    
-    private File[] askUserToChooseFiles(String title, JFrame ownerFrame) {
-        JFileChooser chooser = new JFileChooser(title);
-        chooser.setMultiSelectionEnabled(true);
-        int status = chooser.showOpenDialog(ownerFrame);
-        
-        if (status == JFileChooser.APPROVE_OPTION) {
-            return chooser.getSelectedFiles();
-        }
-        
-        return null;
     }
     
     private static void moveToCenter(JFrame frame) {
@@ -256,7 +142,7 @@ public class App {
         
     }
     
-    private void encryptAll(List<File> fileList, int key) {
+    static void encryptAll(List<File> fileList, int key) {
         fileList.stream().forEach((File file) -> {
             try {
                 byte[] data = FileTools.readFile(file);
@@ -268,7 +154,7 @@ public class App {
         });
     }
     
-    private void decryptAll(List<File> fileList, int key) {
+    static void decryptAll(List<File> fileList, int key) {
         fileList.stream().forEach((File file) -> {
             try {
                 byte[] data = FileTools.readFile(file);
