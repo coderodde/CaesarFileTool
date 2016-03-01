@@ -1,7 +1,6 @@
 package net.coderodde.ciphertool;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -227,10 +225,11 @@ public class App {
     
     private File[] askUserToChooseFiles(String title, JFrame ownerFrame) {
         JFileChooser chooser = new JFileChooser(title);
+        chooser.setMultiSelectionEnabled(true);
         int status = chooser.showOpenDialog(ownerFrame);
         
         if (status == JFileChooser.APPROVE_OPTION) {
-            return new File[]{ chooser.getSelectedFile() };
+            return chooser.getSelectedFiles();
         }
         
         return null;
@@ -258,7 +257,6 @@ public class App {
     }
     
     private void encryptAll(List<File> fileList, int key) {
-        System.out.println("Size: " + fileList.size());
         fileList.stream().forEach((File file) -> {
             try {
                 byte[] data = FileTools.readFile(file);
