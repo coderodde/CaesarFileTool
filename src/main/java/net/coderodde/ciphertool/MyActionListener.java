@@ -9,8 +9,6 @@ import java.util.Objects;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import static net.coderodde.ciphertool.App.decryptAll;
-import static net.coderodde.ciphertool.App.encryptAll;
 import static net.coderodde.ciphertool.App.parseKey;
 
 /**
@@ -31,18 +29,17 @@ final class MyActionListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        File[] files = askUserToChooseFiles(mode == Mode.ENCRYPTING ? 
-                                            "Choose files to encrypt" :
-                                            "Choose files to decrypt",
-                                            ownerFrame);
+        File[] files = askUserToChooseFiles(ownerFrame);
+        
         if (files == null) {
             return;
         }
 
-        Integer key = askKeyFromUser(ownerFrame,
-                                     mode == Mode.ENCRYPTING ?
-                                     "Enter the encryption key:" :
-                                     "Enter the decryption key:");
+        Integer key = askKeyFromUser(
+            ownerFrame,
+            mode == Mode.ENCRYPTING ?
+            "Enter the encryption key. (Use prefix \"0x\" for hexadecimal.)" :
+            "Enter the decryption key: (Use prefix \"0x\" for hexadecimal.)");
         
         if (key == null) {
             return;
@@ -65,8 +62,8 @@ final class MyActionListener implements ActionListener {
         }
     }
 
-    private static File[] askUserToChooseFiles(String title, JFrame ownerFrame) {
-        JFileChooser chooser = new JFileChooser(title);
+    private static File[] askUserToChooseFiles(JFrame ownerFrame) {
+        JFileChooser chooser = new JFileChooser();
         chooser.setMultiSelectionEnabled(true);
         int status = chooser.showOpenDialog(ownerFrame);
 
